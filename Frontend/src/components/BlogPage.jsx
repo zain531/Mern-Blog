@@ -1,69 +1,71 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import CategorySelection from "./CategorySelection";
 import Pagination from "./Pagination";
 import BlogCards from "./BlogCards";
 import Sidebar from "./Sidebar";
 
 const BlogPage = () => {
-    const [blogs, setBlogs] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 12; // Number of products to show per page
-    const [selectedCategory, setSelectedCategory] = useState(null);
-    const [activeCategory, setActiveCategory] = useState(null);
+  const [blogs, setBlogs] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 12;
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [activeCategory, setActiveCategory] = useState(null);
 
-    useEffect(() => {
-        async function fetchBlogs() {
-            let url = `http://localhost:5000/blogs?page=${currentPage}&limit=${pageSize}`;
+  useEffect(() => {
+    async function fetchBlogs() {
+      try {
+        let url = `${import.meta.env.VITE_API_URL}/blogs?page=${currentPage}&limit=${pageSize}`;
 
-            // If a category is selected, add it to the request
-            if (selectedCategory) {
-                url += `&category=${selectedCategory}`;
-            }
-            const response = await fetch(url);
-            const data = await response.json();
-            setBlogs(data);
+        if (selectedCategory) {
+          url += `&category=${selectedCategory}`;
         }
 
-        fetchBlogs();
-    }, [currentPage, pageSize, selectedCategory]);
+        const response = await fetch(url);
+        const data = await response.json();
+        setBlogs(data);
+      } catch (error) {
+        console.error("Failed to fetch blogs:", error);
+      }
+    }
 
-    const handlePageChange = (pageNumber) => {
-        setCurrentPage(pageNumber);
-    };
+    fetchBlogs();
+  }, [currentPage, selectedCategory]);
 
-    <BlogCards blogs={blogs} currentPage={currentPage} selectedCategory={selectedCategory} pageSize={pageSize} />
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
-    const handleCategoryChange = (category) => {
-        setSelectedCategory(category);
-        setCurrentPage(1); // Reset the page to 1 when a new category is selected
-        setActiveCategory(category)
-    };
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    setActiveCategory(category);
+    setCurrentPage(1); // Reset to page 1 on new category
+  };
 
-    return (
-        <div>
-            <div>
-                <CategorySelection onSelectCategory={handleCategoryChange} activeCategory={activeCategory} />
-            </div>
+  return (
+    <div>
+      <CategorySelection
+        onSelectCategory={handleCategoryChange}
+        activeCategory={activeCategory}
+      />
 
-            <div className="flex flex-col lg:flex-row gap-12 ">
+      <div className="flex flex-col lg:flex-row gap-12">
+        <BlogCards
+          blogs={blogs}
+          currentPage={currentPage}
+          selectedCategory={selectedCategory}
+          pageSize={pageSize}
+        />
+        <Sidebar />
+      </div>
 
-                <BlogCards blogs={blogs} currentPage={currentPage} selectedCategory={selectedCategory} pageSize={pageSize} />
-                
-                <div>
-                    <Sidebar/>
-                </div>
-            </div>
-
-            <Pagination
-                currentPage={currentPage}
-                onPageChange={handlePageChange}
-                blogs={blogs}
-                pageSize={pageSize}
-            />
-        </div>
-    );
+      <Pagination
+        currentPage={currentPage}
+        onPageChange={handlePageChange}
+        blogs={blogs}
+        pageSize={pageSize}
+      />
+    </div>
+  );
 };
-
 
 export default BlogPage;
